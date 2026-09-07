@@ -69,3 +69,21 @@ class VectorStoreManager:
         except Exception as e:
             logger.error(f"Error adding documents to ChromaDB: {e}")
             raise
+
+    def delete_document_vectors(self, document_id: str) -> int:
+        """Delete all vector entries matching document_id"""
+        self.initialize_store()
+        try:
+            # Query count before deletion
+            results = self.collection.get(where={"document_id": document_id})
+            deleted_count = len(results.get("ids", []))
+            if deleted_count > 0:
+                self.collection.delete(where={"document_id": document_id})
+                logger.info(f"Deleted {deleted_count} vector chunks for document_id: {document_id}")
+            else:
+                logger.info(f"No vector chunks found for document_id: {document_id}")
+            return deleted_count
+        except Exception as e:
+            logger.error(f"Error deleting vectors for document_id {document_id}: {e}")
+            raise
+

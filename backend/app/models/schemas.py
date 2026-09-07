@@ -21,3 +21,30 @@ class DocumentReference(BaseModel):
 class QueryResponse(BaseModel):
     answer: str
     references: List[DocumentReference]
+
+class DocumentUploadResponse(BaseModel):
+    document_id: str
+    filename: str
+    status: str
+    page_count: int
+    total_chunks: int
+    file_hash: str
+    is_duplicate: bool = False
+
+class DocumentMetadata(BaseModel):
+    document_id: str
+    filename: str
+    stored_path: str
+    upload_time: str
+    page_count: int
+    total_chunks: int
+    file_size: int
+    file_hash: str
+
+class DocumentListResponse(BaseModel):
+    documents: List[DocumentMetadata]
+    total_count: int
+
+class DeleteDocumentResponse(BaseModel):
+    message: str
+    document_id: str
