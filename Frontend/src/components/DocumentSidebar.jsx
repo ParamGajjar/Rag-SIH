@@ -18,7 +18,7 @@ export function DocumentSidebar({
   const handleFileChange = (e) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (!file.name.toLowerCase().endswith('.pdf')) {
+      if (!file.name.toLowerCase().endsWith('.pdf')) {
         alert('Only PDF files are allowed.');
         return;
       }

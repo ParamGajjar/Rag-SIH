@@ -1,7 +1,7 @@
 import os
 import uuid
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List
 from fastapi import APIRouter, UploadFile, File, HTTPException, status
 
@@ -79,7 +79,7 @@ async def upload_document(file: UploadFile = File(...)):
             "document_id": document_id,
             "filename": clean_filename,
             "stored_path": stored_path,
-            "upload_time": datetime.utcnow().isoformat(),
+            "upload_time": datetime.now(timezone.utc).isoformat(),
             "page_count": page_count,
             "total_chunks": total_chunks,
             "file_size": len(content_bytes),
@@ -97,6 +97,14 @@ async def upload_document(file: UploadFile = File(...)):
             is_duplicate=False
         )
 
+    except HTTPException:
+        # Re-raise HTTP exceptions (e.g. 400 for unreadable/empty text) directly and cleanup stored file
+        if os.path.exists(stored_path):
+            try:
+                os.remove(stored_path)
+            except Exception:
+                pass
+        raise
     except Exception as e:
         logger.error(f"Error processing document upload {clean_filename}: {e}", exc_info=True)
         # Clean up file on failure
@@ -107,7 +115,7 @@ async def upload_document(file: UploadFile = File(...)):
                 pass
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to ingest document: {str(e)}"
+            detail="Failed to ingest document due to an internal processing error."
         )
 
 

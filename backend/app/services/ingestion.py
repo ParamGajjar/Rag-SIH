@@ -95,7 +95,7 @@ def save_pdf_to_disk(clean_filename: str, content: bytes, document_id: str) -> s
 
 
 def load_pdf_pages_from_file(file_path: str, filename: str) -> List[Document]:
-    """Load PDF page-by-page, preserving 1-indexed page numbers"""
+    """Load PDF page-by-page, preserving 1-indexed page numbers and checking text validity"""
     try:
         loader = PyPDFLoader(file_path)
         raw_docs = loader.load()
@@ -103,13 +103,21 @@ def load_pdf_pages_from_file(file_path: str, filename: str) -> List[Document]:
         logger.error(f"Error parsing PDF file {file_path}: {e}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Failed to parse PDF document: {str(e)}"
+            detail="Failed to parse PDF document: file may be corrupted or unreadable."
         )
 
     if not raw_docs:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="PDF document contains no readable text pages."
+        )
+
+    # Check total extracted text across all pages
+    total_text = "".join(doc.page_content.strip() for doc in raw_docs)
+    if not total_text:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="PDF document contains no extractable text."
         )
 
     processed_pages = []

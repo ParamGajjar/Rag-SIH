@@ -45,7 +45,7 @@ export function SourceCard({ sources }) {
                     </span>
                   </div>
                 </div>
-                <p className="text-slate-600 leading-relaxed italic bg-slate-50/60 p-2 rounded border border-slate-100 text-[11px]">
+                <p className="text-slate-600 leading-relaxed italic bg-slate-50/60 p-2 rounded border border-slate-100 text-[11px] break-words">
                   "{src.content}"
                 </p>
               </div>

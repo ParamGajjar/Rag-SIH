@@ -31,13 +31,16 @@ def chat_endpoint(request: ChatRequest):
     """
     Grounded Chat API endpoint executing vector retrieval, anti-hallucination checks, and Groq LLM inference.
     """
-    # 1. Validate empty question
+    # 1. Validate empty question and bound query length
     user_query = request.message.strip() if request.message else ""
     if not user_query:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Message cannot be empty."
         )
+    if len(user_query) > 2000:
+        logger.info(f"Query length {len(user_query)} exceeds 2000 chars. Truncating.")
+        user_query = user_query[:2000]
 
     # 2. Manage conversation_id session
     session_id = request.conversation_id if request.conversation_id else f"conv_{uuid.uuid4().hex[:12]}"
@@ -54,7 +57,7 @@ def chat_endpoint(request: ChatRequest):
 
     # 4. If no relevant chunks meet score threshold -> Return grounded fallback with ZERO LLM calls
     if not retrieved_chunks:
-        logger.info(f"No relevant chunks found for query '{user_query}'. Returning grounded fallback.")
+        logger.info(f"No relevant chunks found for query '{user_query[:50]}...'. Returning grounded fallback.")
         return ChatResponse(
             answer=NO_CONTEXT_FALLBACK_ANSWER,
             sources=[],
@@ -100,13 +103,13 @@ def chat_endpoint(request: ChatRequest):
         logger.error(f"Groq LLM service error: {re}")
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
-            detail=f"Groq LLM service failed: {str(re)}"
+            detail="Groq LLM service failed to process request."
         )
     except Exception as e:
         logger.error(f"Unexpected error calling Groq LLM: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Chat generation failed: {str(e)}"
+            detail="Chat generation service encountered an internal error."
         )
 
     # 9. Update conversation memory

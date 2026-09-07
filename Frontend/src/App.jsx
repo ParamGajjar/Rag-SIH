@@ -335,7 +335,7 @@ function App() {
                           : 'bg-white border border-slate-200/90 shadow-2xs text-slate-800'
                       }`}
                     >
-                      <p className="whitespace-pre-wrap">{msg.text}</p>
+                      <p className="whitespace-pre-wrap break-words">{msg.text}</p>
                       {msg.type === 'ai' && <SourceCard sources={msg.sources} />}
                     </div>
                   </div>
