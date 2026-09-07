@@ -48,3 +48,23 @@ class DocumentListResponse(BaseModel):
 class DeleteDocumentResponse(BaseModel):
     message: str
     document_id: str
+
+class RetrieveRequest(BaseModel):
+    query: str = Field(..., min_length=1, description="User search query")
+    document_ids: Optional[List[str]] = Field(None, description="Optional list of document IDs to restrict search scope")
+    top_k: Optional[int] = Field(None, ge=1, le=50, description="Number of top chunks to return")
+    similarity_threshold: Optional[float] = Field(None, ge=0.0, le=1.0, description="Minimum similarity score threshold")
+
+class ChunkSearchResult(BaseModel):
+    document_id: str
+    filename: str
+    page: int
+    chunk_id: str
+    content: str
+    similarity_score: float
+    metadata: Dict[str, Any]
+
+class RetrieveResponse(BaseModel):
+    query: str
+    total_found: int
+    results: List[ChunkSearchResult]

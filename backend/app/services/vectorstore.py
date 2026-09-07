@@ -26,7 +26,10 @@ class VectorStoreManager:
                 self.client = chromadb.PersistentClient(path=self.persist_directory)
                 self.collection = self.client.get_or_create_collection(
                     name=self.collection_name,
-                    metadata={"description": "PDF document embeddings for RAG"}
+                    metadata={
+                        "description": "PDF document embeddings for RAG",
+                        "hnsw:space": "cosine"
+                    }
                 )
                 logger.info(f"Vector store ready. Existing count: {self.collection.count()}")
             except Exception as e:
