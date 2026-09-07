@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from backend.app.config import settings
-from backend.app.routes import health, documents, retrieval
+from backend.app.routes import health, documents, retrieval, chat
 
 # Setup Python logging
 logging.basicConfig(
@@ -49,6 +49,7 @@ async def global_exception_handler(request: Request, exc: Exception):
 app.include_router(health.router)
 app.include_router(documents.router)
 app.include_router(retrieval.router)
+app.include_router(chat.router)
 
 @app.get("/")
 def read_root():

@@ -17,7 +17,7 @@ class Settings:
     DOCUMENTS_META_FILE: str = os.getenv("DOCUMENTS_META_FILE", str(BASE_DIR / "data" / "documents_meta.json"))
     MAX_UPLOAD_SIZE_MB: int = int(os.getenv("MAX_UPLOAD_SIZE_MB", "20"))
     DEFAULT_TOP_K: int = int(os.getenv("DEFAULT_TOP_K", "5"))
-    DEFAULT_SIMILARITY_THRESHOLD: float = float(os.getenv("DEFAULT_SIMILARITY_THRESHOLD", "0.35"))
+    DEFAULT_SIMILARITY_THRESHOLD: float = float(os.getenv("DEFAULT_SIMILARITY_THRESHOLD", "0.20"))
     CHUNK_SIZE: int = int(os.getenv("CHUNK_SIZE", "400"))
     CHUNK_OVERLAP: int = int(os.getenv("CHUNK_OVERLAP", "90"))
     ENABLE_HYBRID_SEARCH: bool = os.getenv("ENABLE_HYBRID_SEARCH", "true").lower() in ("true", "1", "yes")
