@@ -10,14 +10,7 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 class Config:
-    # OpenRouter Primary Settings
-    OPENROUTER_API_KEY: str = os.getenv("OPENROUTER_API_KEY", "")
-    OPENROUTER_MODEL: str = os.getenv("OPENROUTER_MODEL", "meta-llama/llama-3.1-8b-instruct:free")
-    OPENROUTER_BASE_URL: str = "https://openrouter.ai/api/v1"
-
-    # Ollama Fallback Settings
-    OLLAMA_BASE_URL: str = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-    OLLAMA_MODEL: str = os.getenv("OLLAMA_MODEL", "qwen2.5:7b")
+    
 
     # Local Directory Paths
     DOCUMENTS_DIR: Path = BASE_DIR / os.getenv("DOCUMENTS_PATH", "data/documents")
