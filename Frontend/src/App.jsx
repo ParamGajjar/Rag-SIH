@@ -47,31 +47,32 @@ function App() {
     scrollToBottom();
   }, [messages, isThinking]);
 
-  // Initial load & health polling
-  useEffect(() => {
-    const fetchInitialData = async () => {
-      const health = await api.checkHealth();
-      setIsBackendOnline(health.status === 'online');
+  // // Initial load & health polling
+  // useEffect(() => {
+  //   const fetchInitialData = async () => {
+  //     const health = await api.checkHealth();
+  //     setIsBackendOnline(health.status === 'ok')
+  //     // setIsBackendOnline(health.status === 'online');
 
-      if (health.status === 'online') {
-        try {
-          const docData = await api.listDocuments();
-          setDocuments(docData.documents || []);
-          setSelectedDocIds((docData.documents || []).map((d) => d.document_id));
-        } catch (err) {
-          console.error('Error fetching documents:', err);
-        }
-      }
-    };
+  //     if (health.status === 'online') {
+  //       try {
+  //         const docData = await api.listDocuments();
+  //         setDocuments(docData.documents || []);
+  //         setSelectedDocIds((docData.documents || []).map((d) => d.document_id));
+  //       } catch (err) {
+  //         console.error('Error fetching documents:', err);
+  //       }
+  //     }
+  //   };
 
-    fetchInitialData();
-    const interval = setInterval(async () => {
-      const health = await api.checkHealth();
-      setIsBackendOnline(health.status === 'online');
-    }, 10000);
+  //   fetchInitialData();
+  //   const interval = setInterval(async () => {
+  //     const health = await api.checkHealth();
+  //     setIsBackendOnline(health.status === 'ok');
+  //   }, 10000);
 
-    return () => clearInterval(interval);
-  }, []);
+  //   return () => clearInterval(interval);
+  // }, []);
 
   // Document Selection Handlers
   const handleToggleSelectDoc = (id) => {

@@ -12,6 +12,7 @@ env/
 venv/
 ENV/
 .venv/
+backend/
 
 # Vector store and local data uploads
 data/
