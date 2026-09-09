@@ -7,6 +7,8 @@ from typing import List, Dict, Any
 from app.config import Config
 from app.llm.llm_manager import llm_manager
 
+from app.utils.pdf_loader import clean_pdf_text, extract_relevant_snippet
+
 logger = logging.getLogger(__name__)
 
 def load_all_indexes() -> List[Dict[str, Any]]:
@@ -55,10 +57,12 @@ def retrieve_context(query: str) -> List[Dict[str, Any]]:
         for page in pages:
             p_num = str(page["page_number"])
             if p_num in relevant_pages_str:
+                raw_text = page.get("text", "")
+                snippet = extract_relevant_snippet(raw_text, query=query)
                 retrieved_results.append({
                     "doc_name": doc_name,
                     "page_number": page["page_number"],
-                    "content": page["text"]
+                    "content": snippet
                 })
 
     # Fallback: If reasoning is strict, grab page 1 as context default
@@ -66,10 +70,12 @@ def retrieve_context(query: str) -> List[Dict[str, Any]]:
         first_doc = trees[0]
         if first_doc.get("pages"):
             first_page = first_doc["pages"][0]
+            raw_text = first_page.get("text", "")
+            snippet = extract_relevant_snippet(raw_text, query=query)
             retrieved_results.append({
                 "doc_name": first_doc["doc_name"],
                 "page_number": first_page["page_number"],
-                "content": first_page["text"]
+                "content": snippet
             })
 
     return retrieved_results

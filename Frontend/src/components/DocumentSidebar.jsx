@@ -134,12 +134,15 @@ export function DocumentSidebar({
           </div>
         ) : (
           documents.map((doc) => {
-            const isSelected = selectedDocIds.includes(doc.document_id);
-            const fileSizeKb = Math.round(doc.file_size / 1024);
+            const docId = doc.document_id || doc.id || doc.filename;
+            const filename = doc.filename || doc.id || 'Document';
+            const isSelected = selectedDocIds.includes(docId);
+            const fileSizeKb = Math.round((doc.file_size || doc.size || 0) / 1024);
+            const pageCountText = doc.page_count ? `${doc.page_count} pages • ` : '';
 
             return (
               <div
-                key={doc.document_id}
+                key={docId}
                 className={`p-3 rounded-xl border transition-all flex flex-col gap-2 ${
                   isSelected
                     ? 'bg-blue-50/40 border-blue-200'
@@ -148,7 +151,7 @@ export function DocumentSidebar({
               >
                 <div className="flex items-start justify-between gap-2">
                   <div
-                    onClick={() => onToggleSelectDoc(doc.document_id)}
+                    onClick={() => onToggleSelectDoc(docId)}
                     className="flex items-center gap-2 cursor-pointer truncate flex-1"
                   >
                     {isSelected ? (
@@ -156,15 +159,15 @@ export function DocumentSidebar({
                     ) : (
                       <Square size={16} className="text-slate-400 flex-shrink-0" />
                     )}
-                    <span className="font-semibold text-xs text-slate-800 truncate" title={doc.filename}>
-                      {doc.filename}
+                    <span className="font-semibold text-xs text-slate-800 truncate" title={filename}>
+                      {filename}
                     </span>
                   </div>
 
                   <button
                     onClick={() => {
-                      if (window.confirm(`Delete document '${doc.filename}'?`)) {
-                        onDeleteDoc(doc.document_id);
+                      if (window.confirm(`Delete document '${filename}'?`)) {
+                        onDeleteDoc(docId);
                       }
                     }}
                     className="text-slate-400 hover:text-rose-600 p-1 rounded transition-colors"
@@ -175,9 +178,9 @@ export function DocumentSidebar({
                 </div>
 
                 <div className="flex items-center justify-between text-[11px] text-slate-500 pl-6">
-                  <span>{doc.page_count} pages • {fileSizeKb} KB</span>
+                  <span>{pageCountText}{fileSizeKb} KB</span>
                   <span className="bg-emerald-100 text-emerald-700 font-bold px-1.5 py-0.5 rounded text-[10px]">
-                    Ready
+                    {doc.indexed === false ? 'Indexing' : 'Ready'}
                   </span>
                 </div>
               </div>

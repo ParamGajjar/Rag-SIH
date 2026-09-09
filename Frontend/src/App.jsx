@@ -47,32 +47,37 @@ function App() {
     scrollToBottom();
   }, [messages, isThinking]);
 
-  // // Initial load & health polling
-  // useEffect(() => {
-  //   const fetchInitialData = async () => {
-  //     const health = await api.checkHealth();
-  //     setIsBackendOnline(health.status === 'ok')
-  //     // setIsBackendOnline(health.status === 'online');
+  // Initial load & health polling
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      try {
+        const health = await api.checkHealth();
+        const isOnline = Boolean(health && (health.status === 'ok' || health.status === 'online'));
+        setIsBackendOnline(isOnline);
 
-  //     if (health.status === 'online') {
-  //       try {
-  //         const docData = await api.listDocuments();
-  //         setDocuments(docData.documents || []);
-  //         setSelectedDocIds((docData.documents || []).map((d) => d.document_id));
-  //       } catch (err) {
-  //         console.error('Error fetching documents:', err);
-  //       }
-  //     }
-  //   };
+        if (isOnline) {
+          const docData = await api.listDocuments();
+          const docsList = Array.isArray(docData) ? docData : (docData.documents || []);
+          setDocuments(docsList);
+          setSelectedDocIds(docsList.map((d) => d.document_id || d.id || d.filename));
+        }
+      } catch (err) {
+        console.error('Error fetching initial data:', err);
+      }
+    };
 
-  //   fetchInitialData();
-  //   const interval = setInterval(async () => {
-  //     const health = await api.checkHealth();
-  //     setIsBackendOnline(health.status === 'ok');
-  //   }, 10000);
+    fetchInitialData();
+    const interval = setInterval(async () => {
+      try {
+        const health = await api.checkHealth();
+        setIsBackendOnline(Boolean(health && (health.status === 'ok' || health.status === 'online')));
+      } catch {
+        setIsBackendOnline(false);
+      }
+    }, 10000);
 
-  //   return () => clearInterval(interval);
-  // }, []);
+    return () => clearInterval(interval);
+  }, []);
 
   // Document Selection Handlers
   const handleToggleSelectDoc = (id) => {
@@ -84,7 +89,7 @@ function App() {
   };
 
   const handleSelectAllDocs = () => {
-    setSelectedDocIds(documents.map((d) => d.document_id));
+    setSelectedDocIds(documents.map((d) => d.document_id || d.id || d.filename));
   };
 
   const handleClearDocSelection = () => {
@@ -98,11 +103,12 @@ function App() {
     try {
       const result = await api.uploadDocument(file);
       const docData = await api.listDocuments();
-      setDocuments(docData.documents || []);
+      const docsList = Array.isArray(docData) ? docData : (docData.documents || []);
+      setDocuments(docsList);
       
-      // Auto-select newly uploaded doc
-      if (!selectedDocIds.includes(result.document_id)) {
-        setSelectedDocIds([...selectedDocIds, result.document_id]);
+      const uploadedId = (result && (result.document_id || result.id || result.filename)) || file.name;
+      if (uploadedId && !selectedDocIds.includes(uploadedId)) {
+        setSelectedDocIds((prev) => [...prev, uploadedId]);
       }
     } catch (err) {
       setErrorAlert(`Upload failed: ${err.message}`);
@@ -116,7 +122,7 @@ function App() {
     setErrorAlert(null);
     try {
       await api.deleteDocument(id);
-      setDocuments(documents.filter((d) => d.document_id !== id));
+      setDocuments(documents.filter((d) => (d.document_id || d.id || d.filename) !== id));
       setSelectedDocIds(selectedDocIds.filter((docId) => docId !== id));
     } catch (err) {
       setErrorAlert(`Delete failed: ${err.message}`);

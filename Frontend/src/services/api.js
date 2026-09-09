@@ -70,10 +70,86 @@ export const api = {
 
       const data = await newBackendResponse.json();
 
+      const cleanTextContent = (str) => {
+        if (!str || typeof str !== 'string') return '';
+        let text = str.replace(/\/uni([0-9A-Fa-f]{4})/g, (_, hex) => {
+          try {
+            return String.fromCharCode(parseInt(hex, 16));
+          } catch {
+            return '';
+          }
+        });
+        text = text.replace(/\/g[0-9A-Fa-f]+/g, ' ');
+        text = text.replace(/\/[a-zA-Z0-9]+/g, ' ');
+        text = text.replace(/[⌂\u2302\u2300-\u23ff\uf000-\uf8ff\ud800-\udfff]/g, '');
+
+        const legacyPatterns = [
+          /jftLV[^\s]*/gi, /laö/gi, /Mhö/gi, /,yö[^\s]*/gi, /vlk/gi, /Hkkx/gi, /\[k\.M/gi, /mi&\[k\.M/gi,
+          /izkf[^\s]*/gi, /c`gLIifrokj/gi, /fnLEcj/gi, /vxzgk;n[^\s]*/gi, /7147 GI\/\d+/gi,
+          /REGD\.\s*NO\.[^\s]*/gi, /EXTRAORDINARY/gi, /PUBLISHED BY AUTHORITY/gi,
+          /PART II—Section 3—Sub-section \(ii\)/gi, /THE GAZETTE OF INDIA : EXTRAORDINARY/gi,
+          /\[P ART II—S EC \. 3\(ii\)\]/gi
+        ];
+        for (const pat of legacyPatterns) {
+          text = text.replace(pat, ' ');
+        }
+        text = text.replace(/(\b[^\s]+\b)(?:\s+\1){2,}/gi, '$1');
+        text = text.replace(/(?:\.\s*){2,}/g, '... ');
+        text = text.replace(/\s+/g, ' ').trim();
+        return text;
+      };
+
+      const extractRelevantSnippet = (str, maxLen = 350) => {
+        const cleaned = cleanTextContent(str);
+        if (!cleaned) return '';
+        const matches = cleaned.match(/(?:आई एस|IS)\s*\d+.*?(?=(?:आई एस|IS|$))/gi);
+        if (matches && matches.length > 0) {
+          let snippet = matches.slice(0, 4).map((m) => m.trim()).join(' | ');
+          if (snippet.length > maxLen) {
+            snippet = snippet.substring(0, maxLen) + '...';
+          }
+          return snippet;
+        }
+        if (cleaned.length > maxLen) {
+          return cleaned.substring(0, maxLen) + '...';
+        }
+        return cleaned;
+      };
+
+      // Standardize sources payload for React SourceCard component
+      const structuredSources = (data.context && data.context.length > 0)
+        ? data.context.map((c) => ({
+            document: c.doc_name || c.document || 'Document',
+            page: c.page_number || c.page || 1,
+            content: extractRelevantSnippet(c.content || ''),
+            score: c.score !== undefined ? c.score : 0.95,
+          }))
+        : (data.sources || []).map((s) => {
+            if (typeof s === 'object' && s !== null) {
+              return {
+                document: s.document || s.doc_name || 'Document',
+                page: s.page || s.page_number || 1,
+                content: extractRelevantSnippet(s.content || ''),
+                score: s.score !== undefined ? s.score : 0.95,
+              };
+            }
+            const strVal = String(s);
+            const parts = strVal.split('\ncontent :\n');
+            const header = parts[0] || '';
+            const rawContent = parts[1] || strVal;
+            const docMatch = header.match(/^(.*?)\s*—\s*page\s*(\d+)/i);
+            return {
+              document: docMatch ? (docMatch[1].strip ? docMatch[1].strip() : docMatch[1].trim()) : 'Document',
+              page: docMatch ? parseInt(docMatch[2], 10) : 1,
+              content: extractRelevantSnippet(rawContent),
+              score: 0.95,
+            };
+          });
+
       // Standardize output payload for React UI components
       return {
         answer: data.answer || '',
-        sources: data.sources || [],
+        sources: structuredSources,
         conversation_id: conversationId,
         context: data.context || [],
       };
